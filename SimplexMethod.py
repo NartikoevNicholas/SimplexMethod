@@ -1,3 +1,6 @@
-import sys
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow
+def getFunctionData(str_function):
+    list_odds = str_function.join(" мир")
+    print(list_odds)
+
+
+getFunctionData("привет")
