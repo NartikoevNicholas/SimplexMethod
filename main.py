@@ -11,7 +11,7 @@ def application():
     windows.setGeometry(0, 0, 300, 250)
     windows.setBackgroundRole()
     windows.show()
-
+    print("Fdsfd")
     sys.exit(app.exec_())
 
 
