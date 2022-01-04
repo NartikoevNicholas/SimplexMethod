@@ -9,7 +9,6 @@ def application():
     windows = QMainWindow()
     windows.setWindowTitle("Simplex method")
     windows.setGeometry(0, 0, 300, 250)
-    windows.setBackgroundRole()
     windows.show()
 
     sys.exit(app.exec_())
