@@ -48,9 +48,25 @@ def getOddsCondition(odds, free_el, ex=None):
         return ex
 
 
+def getBasicTableOne(list_function_odds, list_odds_condition, list_condition, ex=None):
+    try:    
+        result = list()
+        odds_condition = list_odds_condition[0]
+        for index, i in enumerate(odds_condition):
+            temp_list = list()
+            temp_odds = odds_condition[index]
+            for _, j in enumerate(temp_odds):
+                temp_list.append(temp_odds[_])
+            temp_list.append(1 if list_condition[index] == "<=" else -1)
+            result.append(temp_list)
+    except ex:
+        return ex
+
+
 func = getOddsFunction("1;2", "max")
-odd = ["1;1", "1;-2", "1;1"]
-#cond = ["<=", "<=", "<="]
+odd = ["-1;1", "1;-2", "1;1"]
+condition = ["<=", "<=", "<="]
 free_e = ["1", "1", "3"]
 cond = getOddsCondition(odd, free_e)
-print(cond)
+bt = getBasicTableOne(func, cond, condition)
+print(bt)
