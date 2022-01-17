@@ -33,6 +33,7 @@ def getSolutionSM(str_function, str_extremum, list_str_odds, list_condition, lis
             dict_condition[_] = getRow(list_odds_condition[_], i, list_free_element[_])
         print(dict_condition)
     else:
+
         pass
     pass
 
