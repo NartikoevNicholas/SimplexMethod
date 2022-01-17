@@ -43,7 +43,7 @@ def getSolutionSM(str_function, str_extremum, list_str_odds, list_condition, lis
         for _, i in enumerate(list_odds_function):
             list_odds_function[_] = i * (-1)
     pass
-    print(list_odds_function)
+
 
 
 func = "1;2"
