@@ -74,7 +74,7 @@ def getSolutionSM(str_function, str_extremum, list_str_odds, list_condition, lis
     # Список свободных членов
     list_free_element = list()
     # Основной базис
-    dict_condition = dict()
+    dict_basic = dict()
     # Количество столбцов в начальном базисе
     quantityColmnAndRows = getQuantityColumnsAndRows(list_condition, str_extremum, len(list_odds_function))
 
@@ -87,8 +87,17 @@ def getSolutionSM(str_function, str_extremum, list_str_odds, list_condition, lis
         for _, i in enumerate(list_odds_condition):
             list_odds_condition[_] = getCanonicalViewCondition(i, list_condition, _)
         list_odds_condition = connectFreeElement(list_odds_condition, list_condition, list_free_element)
-        list_odds_condition.append(addRowFunction(list_odds_function, len(list_odds_condition[0])))
-        print(list_odds_condition)
+        for _, i in enumerate(list_odds_condition):
+            dict_basic["X_" + str(_ + len(list_odds_function))] = i
+        dict_basic["F"] = addRowFunction(list_odds_function, len(list_odds_condition[0]))
+        for _, i in enumerate(list_condition):
+            if i == "=>":
+                temp_row = list()
+                for j in list_odds_condition[_]:
+                    temp_row.append(j * (-1))
+                temp_row[-2] = float(0)
+                dict_basic["W_" + str(_ + 1)] = temp_row
+        print(dict_basic)
     else:
         for _, i in enumerate(list_odds_function):
             list_odds_function[_] = i * (-1)
