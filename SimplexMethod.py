@@ -47,7 +47,7 @@ def getQuantityColumnsAndRows(list_condition, str_extremum, int_quantity_odds_fu
 def getUntitled(list_odds, list_condition):
     result = list()
     for _, i in enumerate(list_condition):
-        pass
+        pas
 
 
 def getSolutionSM(str_function, str_extremum, list_str_odds, list_condition, list_str_free_element):
