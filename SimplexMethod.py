@@ -19,7 +19,7 @@ def getCanonicalViewCondition(list_odds_condition, list_condition, index):
             else:
                 result.append(float(-1))
         else:
-            result.append(0)
+            result.append(float(0))
     return result
 
 
@@ -43,11 +43,27 @@ def getQuantityColumnsAndRows(list_condition, str_extremum, int_quantity_odds_fu
     return result
 
 
-# поменяй название фукции
-def getUntitled(list_odds, list_condition):
-    result = list()
+def connectFreeElement(list_odds, list_condition, list_free_odds):
+    result = list_odds
     for _, i in enumerate(list_condition):
-        pas
+        if list_condition[_] == "=>":
+            for index, j in enumerate(list_odds):
+                if index == _:
+                    result[index].append(float(1))
+                else:
+                    result[index].append(float(0))
+    for _, i in enumerate(list_free_odds):
+        result[_].append(list_free_odds[_])
+    return result
+
+
+def addRowFunction(list_free_odds, int_value):
+    result = list()
+    for i in list_free_odds:
+        result.append(i * (-1))
+    for i in range(int_value - len(list_free_odds)):
+        result.append(float(0))
+    return result
 
 
 def getSolutionSM(str_function, str_extremum, list_str_odds, list_condition, list_str_free_element):
@@ -70,12 +86,14 @@ def getSolutionSM(str_function, str_extremum, list_str_odds, list_condition, lis
     if str_extremum == "max":
         for _, i in enumerate(list_odds_condition):
             list_odds_condition[_] = getCanonicalViewCondition(i, list_condition, _)
+        list_odds_condition = connectFreeElement(list_odds_condition, list_condition, list_free_element)
+        list_odds_condition.append(addRowFunction(list_odds_function, len(list_odds_condition[0])))
         print(list_odds_condition)
     else:
         for _, i in enumerate(list_odds_function):
             list_odds_function[_] = i * (-1)
 
-
+"""
 func = "1;2"
 extremum = "max"
 odd = ["-1;1", "1;-2", "1;1"]
@@ -87,7 +105,7 @@ extremum = "max"
 odd = ["1;1", "2;1"]
 condition = ["<=", "=>"]
 free_e = ["2", "1"]
-
+"""
 func = "-6;4;4"
 extremum = "min"
 odd = ["-3;-1;1", "-2;-4;1"]
