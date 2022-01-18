@@ -48,9 +48,11 @@ def addRowFunction(list_free_odds, int_value):
 
 def getAttitude(float_free_element, float_element_main_row):
     result = 0
-    if float_free_element > 0 or float_element_main_row > 0:
+    if float_free_element < 0 or float_element_main_row < 0:
         return None
-    result =
+    result = float_free_element/float_element_main_row
+    return result
+
 
 def getDictBasic(str_function, str_extremum, list_str_odds, list_condition, list_str_free_element):
     # Список членов функций при переменных
@@ -86,15 +88,44 @@ def getDictBasic(str_function, str_extremum, list_str_odds, list_condition, list
             list_odds_function[_] = i * (-1)
     leading_column = dict_basic["F"].index(min(dict_basic["F"]))
     for i in dict_basic:
-        print(dict_basic[i.title()][leading_column])
-        dict_basic[i.title()].append(2)
-    #print(dict_basic)
+        dict_basic[i.title()].append(getAttitude(dict_basic[i.title()][-1], dict_basic[i.title()][leading_column]))
     return dict_basic
 
 
+def roleTriangle(past_element_1, past_element_2, past_element_3):
+    result = past_element_1 - (past_element_2 * past_element_3)
+    return result
+
+
+def getMainElement(dict_basic):
+    result = list()
+    list_column = list()
+    list_row = list()
+    for i in dict_basic["F"]:
+        if i is None:
+            continue
+        list_column.append(i)
+    number_column = list_column.index(min(list_column))
+    for i in dict_basic:
+        if dict_basic[i.title()][-1] is None:
+            continue
+        list_row.append(dict_basic[i.title()][-1])
+    number_row = list_row.index(min(list_row))
+    str_key = str()
+    for _, i in enumerate(dict_basic):
+        if number_row == _:
+            str_key = i
+    result.append(dict_basic[str_key][number_column])
+    result.append(number_row)
+    return result
+
 
 def getNewDictBasic(dict_basic):
-    leading_column = dict_basic["F"].index(min(dict_basic["F"]))
+    result = dict()
+    main_element = getMainElement(dict_basic)
+    for _, i in enumerate(dict_basic.values()):
+        if _ == main_element[1]:
+            pass
 
 
 func = "1;2"
@@ -116,3 +147,5 @@ condition = ["<=", "=>"]
 free_e = ["2", "3"]
 """
 basic = getDictBasic(func, extremum, odd, condition, free_e)
+getNewDictBasic(basic)
+print()
