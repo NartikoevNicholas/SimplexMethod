@@ -14,7 +14,7 @@ def getCanonicalViewCondition(list_odds_condition, list_condition, index):
     result = list_odds_condition
     for i in range(len(list_condition)):
         if i == index:
-            if list_condition[index] == "<=":
+            if list_condition[index] == "<=" or list_condition[index] == "=":
                 result.append(float(1))
             else:
                 result.append(float(-1))
@@ -26,6 +26,7 @@ def getCanonicalViewCondition(list_odds_condition, list_condition, index):
 def connectFreeElement(list_odds, list_condition, list_free_odds):
     result = list_odds
     for _, i in enumerate(list_condition):
+        # это условие связано с r_i, где i = 1,2,3 ...
         if list_condition[_] == "=>":
             for index, j in enumerate(list_odds):
                 if index == _:
@@ -37,15 +38,21 @@ def connectFreeElement(list_odds, list_condition, list_free_odds):
     return result
 
 
-def addRowFunction(list_free_odds, int_value):
+# Заполняет строку функции(F) начального базиса (ТОЛЬКО ДЛЯ НАЧАЛЬНОГО БАЗИСА)
+def getRowFunction(list_odds_function, int_value, str_extremum, last_element=0):
     result = list()
-    for i in list_free_odds:
-        result.append(i * (-1))
-    for i in range(int_value - len(list_free_odds)):
-        result.append(float(0))
+    if str_extremum == "max":
+        for i in list_odds_function:
+            result.append(i * (-1))
+        for i in range(int_value - len(list_odds_function) - 1):
+            result.append(float(0))
+        result.append(float(last_element))
+    else:
+        result = list_odds_function
     return result
 
 
+# Заполяняет столбец "Отношение"
 def getAttitude(float_free_element, float_element_main_row):
     result = 0
     if float_free_element < 0 or float_element_main_row < 0:
@@ -73,9 +80,17 @@ def getDictBasic(str_function, str_extremum, list_str_odds, list_condition, list
         for _, i in enumerate(list_odds_condition):
             list_odds_condition[_] = getCanonicalViewCondition(i, list_condition, _)
         list_odds_condition = connectFreeElement(list_odds_condition, list_condition, list_free_element)
+
+        r = 1
         for _, i in enumerate(list_odds_condition):
-            dict_basic["X_" + str(_ + len(list_odds_function) + 1)] = i
-        dict_basic["F"] = addRowFunction(list_odds_function, len(list_odds_condition[0]))
+            if list_condition[_] == "<=" or list_condition[_] == "=":
+                dict_basic["X_" + str(_ + len(list_odds_function) + 1)] = i
+            elif list_condition[_] == "=>":
+                dict_basic["R_" + str(r)] = i
+                r += 1
+
+        dict_basic["F"] = getRowFunction(list_odds_function, len(list_odds_condition[0]))
+
         for _, i in enumerate(list_condition):
             if i == "=>":
                 temp_row = list()
@@ -127,11 +142,11 @@ def getNewDictBasic(dict_basic):
         if _ == main_element[1]:
             pass
 
-
+"""
 func = "1;2"
 extremum = "max"
 odd = ["-1;1", "1;-2", "1;1"]
-condition = ["<=", "<=", "<="]
+condition = ["<=", "=", "<="]
 free_e = ["1", "1", "3"]
 """
 func = "-1;2"
@@ -139,7 +154,7 @@ extremum = "max"
 odd = ["1;1", "2;1"]
 condition = ["<=", "=>"]
 free_e = ["2", "1"]
-
+"""
 func = "-6;4;4"
 extremum = "min"
 odd = ["-3;-1;1", "-2;-4;1"]
@@ -147,5 +162,5 @@ condition = ["<=", "=>"]
 free_e = ["2", "3"]
 """
 basic = getDictBasic(func, extremum, odd, condition, free_e)
-getNewDictBasic(basic)
-print()
+#getNewDictBasic(basic)
+print(basic)
