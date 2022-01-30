@@ -49,13 +49,16 @@ def getRowFunction(list_odds_function, int_value, str_extremum, last_element=0):
         result.append(float(last_element))
     else:
         result = list_odds_function
+        for i in range(int_value - len(list_odds_function) - 1):
+            result.append(float(0))
+        result.append(float(last_element))
     return result
 
 
 # Заполяняет столбец "Отношение"
 def getAttitude(float_free_element, float_element_main_row):
     result = 0
-    if float_free_element < 0 or float_element_main_row < 0:
+    if float_free_element <= 0 or float_element_main_row <= 0:
         return None
     result = float_free_element/float_element_main_row
     return result
@@ -68,7 +71,7 @@ def getDictBasic(str_function, str_extremum, list_str_odds, list_condition, list
     list_odds_condition = list()
     # Список свободных членов
     list_free_element = list()
-    # Основной базис
+    # Начальная базисная таблица, дальше - НБТ
     dict_basic = dict()
 
     # Цикл заполняющий "list_free_element" и "list_odds_condition"
@@ -76,32 +79,41 @@ def getDictBasic(str_function, str_extremum, list_str_odds, list_condition, list
         list_odds_condition.append(getListFloatOdds(i))
         list_free_element.append(float(list_str_free_element[_]))
     # Условие определяющие к чему стримиться фукция
-    if str_extremum == "max":
-        for _, i in enumerate(list_odds_condition):
-            list_odds_condition[_] = getCanonicalViewCondition(i, list_condition, _)
-        list_odds_condition = connectFreeElement(list_odds_condition, list_condition, list_free_element)
 
-        r = 1
-        for _, i in enumerate(list_odds_condition):
-            if list_condition[_] == "<=" or list_condition[_] == "=":
-                dict_basic["X_" + str(_ + len(list_odds_function) + 1)] = i
-            elif list_condition[_] == "=>":
-                dict_basic["R_" + str(r)] = i
-                r += 1
+    # Приводим к каноническому виду условия
+    for _, i in enumerate(list_odds_condition):
+        list_odds_condition[_] = getCanonicalViewCondition(i, list_condition, _)
 
-        dict_basic["F"] = getRowFunction(list_odds_function, len(list_odds_condition[0]))
+    # Присоединяем свободные элементы
+    list_odds_condition = connectFreeElement(list_odds_condition, list_condition, list_free_element)
 
-        for _, i in enumerate(list_condition):
-            if i == "=>":
-                temp_row = list()
-                for j in list_odds_condition[_]:
-                    temp_row.append(j * (-1))
-                temp_row[-2] = float(0)
-                dict_basic["W_" + str(_ + 1)] = temp_row
-    else:
-        for _, i in enumerate(list_odds_function):
-            list_odds_function[_] = i * (-1)
-    leading_column = dict_basic["F"].index(min(dict_basic["F"]))
+    # Заполняем НБТ (X_, R_)
+    r = 1
+    for _, i in enumerate(list_odds_condition):
+        if list_condition[_] == "<=" or list_condition[_] == "=":
+            dict_basic["X_" + str(_ + len(list_odds_function) + 1)] = i
+        elif list_condition[_] == "=>":
+            dict_basic["R_" + str(r)] = i
+            r += 1
+    # Заполняем строку "F" в НБТ
+    dict_basic["F"] = getRowFunction(list_odds_function, len(list_odds_condition[0]), str_extremum)
+
+    # Продолжаем заполняем НБТ (W_)
+    w = 1
+    for _, i in enumerate(list_condition):
+        if i == "=>":
+            temp_row = list()
+            for j in list_odds_condition[_]:
+                temp_row.append(j * (-1))
+            temp_row[-2] = float(0)
+            dict_basic["W_" + str(w)] = temp_row
+            w += 1
+
+    # Определяем ведущую строку
+    name_row = list(dict_basic.keys())[-1]
+    leading_column = dict_basic[name_row].index(min(dict_basic[name_row][0:-1]))
+
+    # Считаем столбец отношений
     for i in dict_basic:
         dict_basic[i.title()].append(getAttitude(dict_basic[i.title()][-1], dict_basic[i.title()][leading_column]))
     return dict_basic
@@ -162,5 +174,5 @@ condition = ["<=", "=>"]
 free_e = ["2", "3"]
 """
 basic = getDictBasic(func, extremum, odd, condition, free_e)
-#getNewDictBasic(basic)
+# getNewDictBasic(basic)
 print(basic)
