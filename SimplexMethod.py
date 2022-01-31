@@ -125,25 +125,42 @@ def roleTriangle(past_element_1, past_element_2, past_element_3):
 
 
 def getMainElement(dict_basic):
+    # Номер строки и столбца и элемент этого индекса
     result = list()
-    list_column = list()
-    list_row = list()
-    for i in dict_basic["F"]:
-        if i is None:
-            continue
-        list_column.append(i)
-    number_column = list_column.index(min(list_column))
+
+    # Номер стобца
+    name_row = list(dict_basic.keys())[-1]
+    leading_column = dict_basic[name_row].index(min(dict_basic[name_row][0:-2]))
+
+    # Номер строки
+    str_key = ""
+    temp_value = 0
     for i in dict_basic:
-        if dict_basic[i.title()][-1] is None:
-            continue
-        list_row.append(dict_basic[i.title()][-1])
-    number_row = list_row.index(min(list_row))
-    str_key = str()
-    for _, i in enumerate(dict_basic):
-        if number_row == _:
-            str_key = i
-    result.append(dict_basic[str_key][number_column])
-    result.append(number_row)
+        if dict_basic[i.title()][-1] is not None:
+            temp_value = dict_basic[i.title()][-1]
+            str_key = i.title()
+            break
+
+    for i in dict_basic:
+        if dict_basic[i.title()][-1] is not None and temp_value > dict_basic[i.title()][-1]:
+            temp_value = dict_basic[i.title()][-1]
+            str_key = i.title()
+    leading_row = list(dict_basic.keys()).index(str_key)
+
+    # Добавление элементов
+    result.append(dict_basic[str_key][leading_column])
+    result.append(leading_column)
+    result.append(leading_row)
+    return result
+
+
+# Провверка столбца "Отношение" на неопределенные значения
+def validAttitude(dict_basic):
+    result = True
+    list_key = list(dict_basic.keys())
+    for i in list_key:
+        if dict_basic[i][-1] is not None:
+            return False
     return result
 
 
@@ -153,6 +170,7 @@ def getNewDictBasic(dict_basic):
     for _, i in enumerate(dict_basic.values()):
         if _ == main_element[1]:
             pass
+    return result
 
 """
 func = "1;2"
@@ -173,6 +191,12 @@ odd = ["-3;-1;1", "-2;-4;1"]
 condition = ["<=", "=>"]
 free_e = ["2", "3"]
 """
+
 basic = getDictBasic(func, extremum, odd, condition, free_e)
-# getNewDictBasic(basic)
+
+while True:
+    if validAttitude(basic):
+        break
+    basic = getNewDictBasic(basic)
+
 print(basic)
