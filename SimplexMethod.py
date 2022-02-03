@@ -89,10 +89,14 @@ def getDictBasic(str_function, str_extremum, list_str_odds, list_condition, list
 
     # Заполняем НБТ (X_, R_)
     r = 1
+    dict_basic["Basic"] = list()
+    for i in range(len(list_odds_function) + len(list_odds_condition)):
+        dict_basic["Basic"].append("X" + str(i + 1))
     for _, i in enumerate(list_odds_condition):
         if list_condition[_] == "<=" or list_condition[_] == "=":
             dict_basic["X_" + str(_ + len(list_odds_function) + 1)] = i
         elif list_condition[_] == "=>":
+            dict_basic["Basic"].append("R" + str(r))
             dict_basic["R_" + str(r)] = i
             r += 1
     # Заполняем строку "F" в НБТ
@@ -114,7 +118,11 @@ def getDictBasic(str_function, str_extremum, list_str_odds, list_condition, list
     leading_column = dict_basic[name_row].index(min(dict_basic[name_row][0:-1]))
 
     # Считаем столбец отношений
+    dict_basic["Basic"].append("Free element")
+    dict_basic["Basic"].append("Attitude")
     for i in dict_basic:
+        if str(i.title()) == "Basic":
+            continue
         dict_basic[i.title()].append(getAttitude(dict_basic[i.title()][-1], dict_basic[i.title()][leading_column]))
     return dict_basic
 
@@ -172,13 +180,14 @@ def getNewDictBasic(dict_basic):
             pass
     return result
 
-"""
+
+""" 
 func = "1;2"
 extremum = "max"
 odd = ["-1;1", "1;-2", "1;1"]
 condition = ["<=", "=", "<="]
 free_e = ["1", "1", "3"]
-"""
+
 func = "-1;2"
 extremum = "max"
 odd = ["1;1", "2;1"]
@@ -190,13 +199,15 @@ extremum = "min"
 odd = ["-3;-1;1", "-2;-4;1"]
 condition = ["<=", "=>"]
 free_e = ["2", "3"]
-"""
+
 
 basic = getDictBasic(func, extremum, odd, condition, free_e)
-
+print(basic)
+'''
 while True:
     if validAttitude(basic):
         break
     basic = getNewDictBasic(basic)
 
 print(basic)
+'''
