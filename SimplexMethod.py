@@ -150,12 +150,16 @@ def getMainElement(dict_basic):
     str_key = ""
     temp_value = 0
     for i in dict_basic:
+        if str(i.title()) == "Basic":
+            continue
         if dict_basic[i.title()][-1] is not None:
             temp_value = dict_basic[i.title()][-1]
             str_key = i.title()
             break
 
     for i in dict_basic:
+        if str(i.title()) == "Basic":
+            continue
         if dict_basic[i.title()][-1] is not None and temp_value > dict_basic[i.title()][-1]:
             temp_value = dict_basic[i.title()][-1]
             str_key = i.title()
@@ -178,37 +182,69 @@ def validAttitude(dict_basic):
     return result
 
 
-def getNewDictBasic(dict_basic):
-    result = dict()
-    main_element = getMainElement(dict_basic)
-    for _, i in enumerate(dict_basic.values()):
-        if _ == main_element[1]:
-            pass
+def getIntitle(list_odds, denominator):
+    result = list()
+    if denominator == 1:
+        return list_odds
+    for i in list_odds:
+        result.append(i/denominator)
     return result
 
 
-""" 
+def getNewDictBasic(dict_basic):
+    result = dict()
+
+    # [0] - главный элемент, [1] - номер столбцаб, [2] - номер строки
+    main_element = getMainElement(dict_basic)
+
+    # шапка таблицы
+    result["Basic"] = dict_basic["Basic"]
+
+    # Считаем костяк таблицы
+    for _, i in enumerate(dict_basic):
+        if str(i) == "Basic":
+            continue
+        if _ == main_element[2]:
+            str_key = result["Basic"][main_element[1]]
+            row = dict_basic[i][0:-1]
+            result[str_key] = getIntitle(row, main_element[0])
+            continue
+        temp_row = list()
+        for __, j in enumerate(dict_basic[i][0:-1]):
+            y = dict_basic[list(dict_basic.keys())[main_element[2]]][__]
+            temp_row.append(roleTriangle(j, y, dict_basic[i][1]))
+        result[i] = temp_row
+
+    name_row = list(dict_basic.keys())[-1]
+    leading_column = result[name_row].index(min(result[name_row][0:-1]))
+
+    for i in result:
+        if i == "Basic":
+            continue
+        result[i].append(getAttitude(result[i][-1], result[i][leading_column]))
+    return result
+
+"""
 func = "1;2"
 extremum = "max"
 odd = ["-1;1", "1;-2", "1;1"]
 condition = ["<=", "=", "<="]
 free_e = ["1", "1", "3"]
-
+"""
 func = "-1;2"
 extremum = "max"
 odd = ["1;1", "2;1"]
 condition = ["<=", "=>"]
 free_e = ["2", "1"]
 """
-func = "-6;4;4"
+func = "-6;4;4"     
 extremum = "min"
 odd = ["-3;-1;1", "-2;-4;1"]
 condition = ["<=", "=>"]
 free_e = ["2", "3"]
-
+"""
 
 basic = getDictBasic(func, extremum, odd, condition, free_e)
-print(basic)
 
 while True:
     if validAttitude(basic):
