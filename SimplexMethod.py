@@ -1,3 +1,4 @@
+# Преобразуем элементы стр в числа (ТОЛЬКО ДЛЯ НАЧАЛЬНОГО БАЗИСА)
 def getListFloatOdds(str_temp, ex=None):
     try:
         result = list()
@@ -10,6 +11,7 @@ def getListFloatOdds(str_temp, ex=None):
         return ex
 
 
+# Получаем канонический вид уравнения (ТОЛЬКО ДЛЯ НАЧАЛЬНОГО БАЗИСА)
 def getCanonicalViewCondition(list_odds_condition, list_condition, index):
     result = list_odds_condition
     for i in range(len(list_condition)):
@@ -23,6 +25,7 @@ def getCanonicalViewCondition(list_odds_condition, list_condition, index):
     return result
 
 
+# Присоединяем свободные элементы (ТОЛЬКО ДЛЯ НАЧАЛЬНОГО БАЗИСА)
 def connectFreeElement(list_odds, list_condition, list_free_odds):
     result = list_odds
     for _, i in enumerate(list_condition):
@@ -55,15 +58,7 @@ def getRowFunction(list_odds_function, int_value, str_extremum, last_element=0):
     return result
 
 
-# Заполяняет столбец "Отношение"
-def getAttitude(float_free_element, float_element_main_row):
-    result = 0
-    if float_free_element <= 0 or float_element_main_row <= 0:
-        return None
-    result = float_free_element/float_element_main_row
-    return result
-
-
+# получаем начальную базисную таблицу
 def getDictBasic(str_function, str_extremum, list_str_odds, list_condition, list_str_free_element):
     # Список членов функций при переменных
     list_odds_function = getListFloatOdds(str_function)
@@ -127,11 +122,22 @@ def getDictBasic(str_function, str_extremum, list_str_odds, list_condition, list
     return dict_basic
 
 
+# Заполяняет столбец "Отношение"
+def getAttitude(float_free_element, float_element_main_row):
+    result = 0
+    if float_free_element <= 0 or float_element_main_row <= 0:
+        return None
+    result = float_free_element/float_element_main_row
+    return result
+
+
+# правило треугольника
 def roleTriangle(past_element_1, past_element_2, past_element_3):
     result = past_element_1 - (past_element_2 * past_element_3)
     return result
 
 
+# Получаем главный элемент, номер строки и столбца главного элемента
 def getMainElement(dict_basic):
     # Номер строки и столбца и элемент этого индекса
     result = list()
@@ -203,11 +209,12 @@ free_e = ["2", "3"]
 
 basic = getDictBasic(func, extremum, odd, condition, free_e)
 print(basic)
-'''
+
 while True:
     if validAttitude(basic):
+        print("break")
         break
     basic = getNewDictBasic(basic)
 
 print(basic)
-'''
+
