@@ -191,6 +191,44 @@ def getIntitle(list_odds, denominator):
     return result
 
 
+def validOnDelFunc(list_odds, int_index):
+    result = True
+    for i in range(len(list_odds)):
+        if i == int_index:
+            if list_odds[i] == 1:
+                continue
+            else:
+                result = False
+                break
+        if list_odds[i] != 0:
+            result = False
+            break
+    return result
+
+
+def dropRow(dict_basic):
+    result = dict()
+    value = 0
+
+    # Ищем псевдофункции
+    for _, i in enumerate(dict_basic["Basic"]):
+        if i[0] == "R":
+            value += 1
+
+    # если value равно ноль значит в таблице нет псевдофункий
+    if value == 0:
+        return dict_basic
+
+    # ищем строки которые нужно дропнуть, если таковые есть
+    for i in range(value):
+        list_odds = dict_basic["W_" + str(i + 1)][0:-1]
+        int_index = dict_basic["Basic"].index("R" + str(i + 1))
+        if validOnDelFunc(list_odds, int_index):
+            pass
+
+    return result
+
+
 def getNewDictBasic(dict_basic):
     result = dict()
 
@@ -222,6 +260,7 @@ def getNewDictBasic(dict_basic):
         if i == "Basic":
             continue
         result[i].append(getAttitude(result[i][-1], result[i][leading_column]))
+    result = dropRow(result)
     return result
 
 """
