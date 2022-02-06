@@ -1,3 +1,6 @@
+from copy import deepcopy
+
+
 # Преобразуем элементы стр в числа (ТОЛЬКО ДЛЯ НАЧАЛЬНОГО БАЗИСА)
 def getListFloatOdds(str_temp, ex=None):
     try:
@@ -86,12 +89,12 @@ def getDictBasic(str_function, str_extremum, list_str_odds, list_condition, list
     r = 1
     dict_basic["Basic"] = list()
     for i in range(len(list_odds_function) + len(list_odds_condition)):
-        dict_basic["Basic"].append("X" + str(i + 1))
+        dict_basic["Basic"].append("X_" + str(i + 1))
     for _, i in enumerate(list_odds_condition):
         if list_condition[_] == "<=" or list_condition[_] == "=":
             dict_basic["X_" + str(_ + len(list_odds_function) + 1)] = i
         elif list_condition[_] == "=>":
-            dict_basic["Basic"].append("R" + str(r))
+            dict_basic["Basic"].append("R_" + str(r))
             dict_basic["R_" + str(r)] = i
             r += 1
     # Заполняем строку "F" в НБТ
@@ -116,9 +119,9 @@ def getDictBasic(str_function, str_extremum, list_str_odds, list_condition, list
     dict_basic["Basic"].append("Free element")
     dict_basic["Basic"].append("Attitude")
     for i in dict_basic:
-        if str(i.title()) == "Basic":
+        if str(i) == "Basic":
             continue
-        dict_basic[i.title()].append(getAttitude(dict_basic[i.title()][-1], dict_basic[i.title()][leading_column]))
+        dict_basic[i].append(getAttitude(dict_basic[i][-1], dict_basic[i][leading_column]))
     return dict_basic
 
 
@@ -175,8 +178,9 @@ def getMainElement(dict_basic):
 # Провверка столбца "Отношение" на неопределенные значения
 def validAttitude(dict_basic):
     result = True
-    list_key = list(dict_basic.keys())
-    for i in list_key:
+    for i in dict_basic:
+        if i == "Basic":
+            continue
         if dict_basic[i][-1] is not None:
             return False
     return result
@@ -207,7 +211,7 @@ def validOnDelFunc(list_odds, int_index):
 
 
 def dropRow(dict_basic):
-    result = dict()
+    result = deepcopy(dict_basic)
     value = 0
 
     # Ищем псевдофункции
@@ -222,11 +226,30 @@ def dropRow(dict_basic):
     # ищем строки которые нужно дропнуть, если таковые есть
     for i in range(value):
         list_odds = dict_basic["W_" + str(i + 1)][0:-1]
-        int_index = dict_basic["Basic"].index("R" + str(i + 1))
+        int_index = dict_basic["Basic"].index("R_" + str(i + 1))
         if validOnDelFunc(list_odds, int_index):
-            pass
-
+            for j in dict_basic:
+                if j == "Basic":
+                    del result[j][int_index]
+                    continue
+                if j == "W_" + str(i + 1):
+                    del result["W_" + str(i + 1)]
+                    continue
+                temp_list = list()
+                for k in range(len(dict_basic[j])):
+                    if k == int_index:
+                        continue
+                    temp_list.append(dict_basic[j][k])
+                result[j] = temp_list
     return result
+
+
+def validFunction(list_function):
+    result = False
+    for i in list_function:
+        if 0 > i:
+            return result
+    return True
 
 
 def getNewDictBasic(dict_basic):
@@ -238,36 +261,42 @@ def getNewDictBasic(dict_basic):
     # шапка таблицы
     result["Basic"] = dict_basic["Basic"]
 
+    # список коэффициентов для подсчета новых элементов для таблицы
+    list_row = dict_basic[list(dict_basic.keys())[main_element[2]]][0:-1]
+    row_coefficient = getIntitle(list_row, main_element[0])
+
     # Считаем костяк таблицы
     for _, i in enumerate(dict_basic):
         if str(i) == "Basic":
             continue
         if _ == main_element[2]:
             str_key = result["Basic"][main_element[1]]
-            row = dict_basic[i][0:-1]
-            result[str_key] = getIntitle(row, main_element[0])
+            result[str_key] = row_coefficient
             continue
         temp_row = list()
         for __, j in enumerate(dict_basic[i][0:-1]):
-            y = dict_basic[list(dict_basic.keys())[main_element[2]]][__]
-            temp_row.append(roleTriangle(j, y, dict_basic[i][1]))
+            y = row_coefficient[__]
+            temp_row.append(roleTriangle(j, y, dict_basic[i][main_element[1]]))
         result[i] = temp_row
 
-    name_row = list(dict_basic.keys())[-1]
-    leading_column = result[name_row].index(min(result[name_row][0:-1]))
+    # Проверяем можем ли удалить псевдофункции (Если таковые есть)
+    result = dropRow(result)
 
+    # Считаем столбец отношений
+    name_row = list(result.keys())[-1]
+    leading_column = result[name_row].index(min(result[name_row][0:-1]))
     for i in result:
         if i == "Basic":
             continue
         result[i].append(getAttitude(result[i][-1], result[i][leading_column]))
-    result = dropRow(result)
+
     return result
 
-"""
+
 func = "1;2"
 extremum = "max"
 odd = ["-1;1", "1;-2", "1;1"]
-condition = ["<=", "=", "<="]
+condition = ["<=", "<=", "<="]
 free_e = ["1", "1", "3"]
 """
 func = "-1;2"
@@ -275,7 +304,7 @@ extremum = "max"
 odd = ["1;1", "2;1"]
 condition = ["<=", "=>"]
 free_e = ["2", "1"]
-"""
+
 func = "-6;4;4"     
 extremum = "min"
 odd = ["-3;-1;1", "-2;-4;1"]
@@ -289,7 +318,9 @@ while True:
     if validAttitude(basic):
         print("break")
         break
+    if validFunction(basic["F"][0:-1]):
+        break
     basic = getNewDictBasic(basic)
+    pass
 
 print(basic)
-
