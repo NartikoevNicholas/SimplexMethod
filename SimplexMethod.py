@@ -1,128 +1,239 @@
 from copy import deepcopy
 
 
-# Преобразуем элементы стр в числа (ТОЛЬКО ДЛЯ НАЧАЛЬНОГО БАЗИСА)
-def getListFloatOdds(str_temp, ex=None):
-    try:
+class PrimaryBasic:
+    # Создаем объекта
+    def __init__(self, str_extremum, str_function, list_odd, list_condition, list_free_e):
+        self.str_extremum = str_extremum
+        self.list_odds_function = [float(x) for x in str_function.split(";")]
+        self.list_condition = list_condition
+        self.list_free_element = [float(x) for x in list_free_e]
+        self.list_odds_condition = self.getCanonicalViewOddsConditionAndConnectFreeElement(list_odd)
+        self.primary_basic = self.getDictMainBasic()
+
+    # Приводим к каноническому виду члены условий
+    def getCanonicalViewOddsConditionAndConnectFreeElement(self, list_odd):
+        # конвертируем строки списка в числа списка
         result = list()
-        for i in str_temp.split(";"):
-            if i == "":
-                continue
-            result.append(float(i))
-        return result
-    except ex:
-        return ex
+        for i in list_odd:
+            temp_list = list()
+            for j in i.split(";"):
+                temp_list.append(float(j))
+            result.append(temp_list)
 
-
-# Получаем канонический вид уравнения (ТОЛЬКО ДЛЯ НАЧАЛЬНОГО БАЗИСА)
-def getCanonicalViewCondition(list_odds_condition, list_condition, index):
-    result = list_odds_condition
-    for i in range(len(list_condition)):
-        if i == index:
-            if list_condition[index] == "<=" or list_condition[index] == "=":
-                result.append(float(1))
-            else:
-                result.append(float(-1))
-        else:
-            result.append(float(0))
-    return result
-
-
-# Присоединяем свободные элементы (ТОЛЬКО ДЛЯ НАЧАЛЬНОГО БАЗИСА)
-def connectFreeElement(list_odds, list_condition, list_free_odds):
-    result = list_odds
-    for _, i in enumerate(list_condition):
-        # это условие связано с r_i, где i = 1,2,3 ...
-        if list_condition[_] == "=>":
-            for index, j in enumerate(list_odds):
-                if index == _:
-                    result[index].append(float(1))
+        # этот цикл связано с "<=" и "="
+        for index in range(len(result)):
+            for i in range(len(self.list_condition)):
+                if i == index:
+                    if self.list_condition[index] == "<=" or self.list_condition[index] == "=":
+                        result[index].append(float(1))
+                    else:
+                        result[index].append(float(-1))
                 else:
                     result[index].append(float(0))
-    for _, i in enumerate(list_free_odds):
-        result[_].append(list_free_odds[_])
-    return result
+
+        # этот цикл связано с "=>"
+        for _, i in enumerate(self.list_condition):
+            if i == "=>":
+                for __, j in enumerate(result):
+                    if __ == _:
+                        j.append(float(1))
+                    else:
+                        j.append(float(0))
+
+        # Присоединяем свободные элементы
+        for i in range(len(self.list_free_element)):
+            result[i].append(self.list_free_element[i])
+        return result
+
+    # Начальная базисная таблица
+    def getDictMainBasic(self):
+        # Начальная базисная таблица, дальше - НБТ
+        dict_basic = dict()
+
+        # Заполняем НБТ (X_, R_)
+        r = 1
+        dict_basic["Basic"] = list()
+        for i in range(len(self.list_odds_function) + len(self.list_odds_condition)):
+            dict_basic["Basic"].append("X_" + str(i + 1))
+
+        for _, i in enumerate(self.list_odds_condition):
+            if self.list_condition[_] == "<=" or self.list_condition[_] == "=":
+                dict_basic["X_" + str(_ + len(self.list_odds_function) + 1)] = i
+            elif self.list_condition[_] == "=>":
+                dict_basic["Basic"].append("R_" + str(r))
+                dict_basic["R_" + str(r)] = i
+                r += 1
+
+        # Заполняем строку "F" в НБТ
+        dict_basic["F"] = list()
+        if self.str_extremum == "max":
+            for i in self.list_odds_function:
+                dict_basic["F"].append(i * (-1))
+            for i in range(len(self.list_odds_condition[0]) - len(self.list_odds_function) - 1):
+                dict_basic["F"].append(float(0))
+            dict_basic["F"].append(float(0))
+        else:
+            dict_basic["F"] = self.list_odds_function
+            for i in range(len(self.list_odds_condition[0]) - len(self.list_odds_function) - 1):
+                dict_basic["F"].append(float(0))
+            dict_basic["F"].append(float(0))
+
+        # Продолжаем заполняем НБТ (W_)
+        w = 1
+        for _, i in enumerate(self.list_condition):
+            if i == "=>":
+                dict_basic["W_" + str(w)] = list()
+                for j in self.list_odds_condition[_]:
+                    dict_basic["W_" + str(w)].append(j * (-1))
+                dict_basic["W_" + str(w)][-2] = float(0)
+                w += 1
+
+        # Определяем ведущую строку
+        name_row = list(dict_basic.keys())[-1]
+        leading_column = dict_basic[name_row].index(min(dict_basic[name_row][0:-1]))
+
+        # Считаем столбец отношений
+        dict_basic["Basic"].append("Free element")
+        dict_basic["Basic"].append("Attitude")
+        for i in dict_basic:
+            if i == "Basic":
+                continue
+            dict_basic[i].append(getAttitude(dict_basic[i][-1], dict_basic[i][leading_column]))
+        return dict_basic
 
 
-# Заполняет строку функции(F) начального базиса (ТОЛЬКО ДЛЯ НАЧАЛЬНОГО БАЗИСА)
-def getRowFunction(list_odds_function, int_value, str_extremum, last_element=0):
-    result = list()
-    if str_extremum == "max":
-        for i in list_odds_function:
-            result.append(i * (-1))
-        for i in range(int_value - len(list_odds_function) - 1):
-            result.append(float(0))
-        result.append(float(last_element))
-    else:
-        result = list_odds_function
-        for i in range(int_value - len(list_odds_function) - 1):
-            result.append(float(0))
-        result.append(float(last_element))
-    return result
+class SecondaryBasic:
+    # Создаем объекта
+    def __init__(self, dict_basic):
+        self.primary_basic = dict_basic
+        self.main_element = self.getMainElement()
+        self.row_coefficient = self.getRowCoefficient()
+        self.temp_basic = dict()
+        self.secondary_basic = self.getSecondaryBasic()
 
+    def getMainElement(self):
+        # Номер строки и столбца и элемент этого индекса
+        result = list()
 
-# получаем начальную базисную таблицу
-def getDictBasic(str_function, str_extremum, list_str_odds, list_condition, list_str_free_element):
-    # Список членов функций при переменных
-    list_odds_function = getListFloatOdds(str_function)
-    # Список челенов в условиях при переменных
-    list_odds_condition = list()
-    # Список свободных членов
-    list_free_element = list()
-    # Начальная базисная таблица, дальше - НБТ
-    dict_basic = dict()
+        # Номер стобца
+        name_row = list(self.primary_basic.keys())[-1]
+        leading_column = self.primary_basic[name_row].index(min(self.primary_basic[name_row][0:-2]))
 
-    # Цикл заполняющий "list_free_element" и "list_odds_condition"
-    for _, i in enumerate(list_str_odds):
-        list_odds_condition.append(getListFloatOdds(i))
-        list_free_element.append(float(list_str_free_element[_]))
-    # Условие определяющие к чему стримиться фукция
+        # Номер строки
+        str_key = ""
+        temp_value = 0
+        for i in self.primary_basic:
+            if i == "Basic":
+                continue
+            if self.primary_basic[i][-1] is not None:
+                temp_value = self.primary_basic[i][-1]
+                str_key = i
+                break
 
-    # Приводим к каноническому виду условия
-    for _, i in enumerate(list_odds_condition):
-        list_odds_condition[_] = getCanonicalViewCondition(i, list_condition, _)
+        for i in self.primary_basic:
+            if i == "Basic":
+                continue
+            if self.primary_basic[i][-1] is not None and temp_value > self.primary_basic[i][-1]:
+                temp_value = self.primary_basic[i][-1]
+                str_key = i
+        leading_row = list(self.primary_basic.keys()).index(str_key)
 
-    # Присоединяем свободные элементы
-    list_odds_condition = connectFreeElement(list_odds_condition, list_condition, list_free_element)
+        # Добавление элементов
+        result.append(self.primary_basic[str_key][leading_column])
+        result.append(leading_column)
+        result.append(leading_row)
+        return result
 
-    # Заполняем НБТ (X_, R_)
-    r = 1
-    dict_basic["Basic"] = list()
-    for i in range(len(list_odds_function) + len(list_odds_condition)):
-        dict_basic["Basic"].append("X_" + str(i + 1))
-    for _, i in enumerate(list_odds_condition):
-        if list_condition[_] == "<=" or list_condition[_] == "=":
-            dict_basic["X_" + str(_ + len(list_odds_function) + 1)] = i
-        elif list_condition[_] == "=>":
-            dict_basic["Basic"].append("R_" + str(r))
-            dict_basic["R_" + str(r)] = i
-            r += 1
-    # Заполняем строку "F" в НБТ
-    dict_basic["F"] = getRowFunction(list_odds_function, len(list_odds_condition[0]), str_extremum)
+    def getRowCoefficient(self):
+        result = list()
+        list_row = self.primary_basic[list(self.primary_basic.keys())[self.main_element[2]]][0:-1]
+        if self.main_element[0] == 1:
+            return list_row
+        for i in list_row:
+            result.append(i / self.main_element[0])
+        return result
 
-    # Продолжаем заполняем НБТ (W_)
-    w = 1
-    for _, i in enumerate(list_condition):
-        if i == "=>":
+    def validOnDelFunc(self, index, int_index):
+        result = True
+        list_odds = self.temp_basic["W_" + str(index + 1)][0:-1]
+        for i in range(len(list_odds)):
+            if i == int_index:
+                if list_odds[i] == 1:
+                    continue
+                else:
+                    result = False
+                    break
+            if list_odds[i] != 0:
+                result = False
+                break
+        return result
+
+    def dropRow(self):
+        result = deepcopy(self.temp_basic)
+        value = 0
+
+        # Ищем псевдофункции
+        for i in self.temp_basic["Basic"]:
+            if i[0] == "R":
+                value += 1
+
+        # если value равно ноль значит в таблице нет псевдофункий
+        if value == 0:
+            return result
+
+        # ищем строки которые нужно дропнуть, если таковые есть
+        for i in range(value):
+            int_index = self.temp_basic["Basic"].index("R_" + str(i + 1))
+            if self.validOnDelFunc(i, int_index):
+                for j in self.temp_basic:
+                    if j == "Basic":
+                        del result[j][int_index]
+                        continue
+                    if j == "W_" + str(i + 1):
+                        del result["W_" + str(i + 1)]
+                        continue
+                    temp_list = list()
+                    for k in range(len(self.temp_basic[j])):
+                        if k == int_index:
+                            continue
+                        temp_list.append(self.temp_basic[j][k])
+                    result[j] = temp_list
+        return result
+
+    def getSecondaryBasic(self):
+        result = dict()
+
+        # шапка таблицы
+        result["Basic"] = self.primary_basic["Basic"]
+
+        # Считаем костяк таблицы
+        for _, i in enumerate(self.primary_basic):
+            if i == "Basic":
+                continue
+            if _ == self.main_element[2]:
+                str_key = result["Basic"][self.main_element[1]]
+                result[str_key] = self.row_coefficient
+                continue
             temp_row = list()
-            for j in list_odds_condition[_]:
-                temp_row.append(j * (-1))
-            temp_row[-2] = float(0)
-            dict_basic["W_" + str(w)] = temp_row
-            w += 1
+            for __, j in enumerate(self.primary_basic[i][0:-1]):
+                y = self.row_coefficient[__]
+                temp_row.append(j - (y * self.primary_basic[i][self.main_element[1]]))
+            result[i] = temp_row
 
-    # Определяем ведущую строку
-    name_row = list(dict_basic.keys())[-1]
-    leading_column = dict_basic[name_row].index(min(dict_basic[name_row][0:-1]))
+        # Проверяем можем ли удалить псевдофункции (Если таковые есть)
+        self.temp_basic = result
+        result = self.dropRow()
 
-    # Считаем столбец отношений
-    dict_basic["Basic"].append("Free element")
-    dict_basic["Basic"].append("Attitude")
-    for i in dict_basic:
-        if str(i) == "Basic":
-            continue
-        dict_basic[i].append(getAttitude(dict_basic[i][-1], dict_basic[i][leading_column]))
-    return dict_basic
+        # Считаем столбец отношений
+        name_row = list(result.keys())[-1]
+        leading_column = result[name_row].index(min(result[name_row][0:-1]))
+        for i in result:
+            if i == "Basic":
+                continue
+            result[i].append(getAttitude(result[i][-1], result[i][leading_column]))
+
+        return result
 
 
 # Заполяняет столбец "Отношение"
@@ -131,47 +242,6 @@ def getAttitude(float_free_element, float_element_main_row):
     if float_free_element <= 0 or float_element_main_row <= 0:
         return None
     result = float_free_element/float_element_main_row
-    return result
-
-
-# правило треугольника
-def roleTriangle(past_element_1, past_element_2, past_element_3):
-    result = past_element_1 - (past_element_2 * past_element_3)
-    return result
-
-
-# Получаем главный элемент, номер строки и столбца главного элемента
-def getMainElement(dict_basic):
-    # Номер строки и столбца и элемент этого индекса
-    result = list()
-
-    # Номер стобца
-    name_row = list(dict_basic.keys())[-1]
-    leading_column = dict_basic[name_row].index(min(dict_basic[name_row][0:-2]))
-
-    # Номер строки
-    str_key = ""
-    temp_value = 0
-    for i in dict_basic:
-        if str(i.title()) == "Basic":
-            continue
-        if dict_basic[i.title()][-1] is not None:
-            temp_value = dict_basic[i.title()][-1]
-            str_key = i.title()
-            break
-
-    for i in dict_basic:
-        if str(i.title()) == "Basic":
-            continue
-        if dict_basic[i.title()][-1] is not None and temp_value > dict_basic[i.title()][-1]:
-            temp_value = dict_basic[i.title()][-1]
-            str_key = i.title()
-    leading_row = list(dict_basic.keys()).index(str_key)
-
-    # Добавление элементов
-    result.append(dict_basic[str_key][leading_column])
-    result.append(leading_column)
-    result.append(leading_row)
     return result
 
 
@@ -186,64 +256,6 @@ def validAttitude(dict_basic):
     return result
 
 
-def getIntitle(list_odds, denominator):
-    result = list()
-    if denominator == 1:
-        return list_odds
-    for i in list_odds:
-        result.append(i/denominator)
-    return result
-
-
-def validOnDelFunc(list_odds, int_index):
-    result = True
-    for i in range(len(list_odds)):
-        if i == int_index:
-            if list_odds[i] == 1:
-                continue
-            else:
-                result = False
-                break
-        if list_odds[i] != 0:
-            result = False
-            break
-    return result
-
-
-def dropRow(dict_basic):
-    result = deepcopy(dict_basic)
-    value = 0
-
-    # Ищем псевдофункции
-    for _, i in enumerate(dict_basic["Basic"]):
-        if i[0] == "R":
-            value += 1
-
-    # если value равно ноль значит в таблице нет псевдофункий
-    if value == 0:
-        return dict_basic
-
-    # ищем строки которые нужно дропнуть, если таковые есть
-    for i in range(value):
-        list_odds = dict_basic["W_" + str(i + 1)][0:-1]
-        int_index = dict_basic["Basic"].index("R_" + str(i + 1))
-        if validOnDelFunc(list_odds, int_index):
-            for j in dict_basic:
-                if j == "Basic":
-                    del result[j][int_index]
-                    continue
-                if j == "W_" + str(i + 1):
-                    del result["W_" + str(i + 1)]
-                    continue
-                temp_list = list()
-                for k in range(len(dict_basic[j])):
-                    if k == int_index:
-                        continue
-                    temp_list.append(dict_basic[j][k])
-                result[j] = temp_list
-    return result
-
-
 def validFunction(list_function):
     result = False
     for i in list_function:
@@ -252,53 +264,13 @@ def validFunction(list_function):
     return True
 
 
-def getNewDictBasic(dict_basic):
-    result = dict()
-
-    # [0] - главный элемент, [1] - номер столбцаб, [2] - номер строки
-    main_element = getMainElement(dict_basic)
-
-    # шапка таблицы
-    result["Basic"] = dict_basic["Basic"]
-
-    # список коэффициентов для подсчета новых элементов для таблицы
-    list_row = dict_basic[list(dict_basic.keys())[main_element[2]]][0:-1]
-    row_coefficient = getIntitle(list_row, main_element[0])
-
-    # Считаем костяк таблицы
-    for _, i in enumerate(dict_basic):
-        if str(i) == "Basic":
-            continue
-        if _ == main_element[2]:
-            str_key = result["Basic"][main_element[1]]
-            result[str_key] = row_coefficient
-            continue
-        temp_row = list()
-        for __, j in enumerate(dict_basic[i][0:-1]):
-            y = row_coefficient[__]
-            temp_row.append(roleTriangle(j, y, dict_basic[i][main_element[1]]))
-        result[i] = temp_row
-
-    # Проверяем можем ли удалить псевдофункции (Если таковые есть)
-    result = dropRow(result)
-
-    # Считаем столбец отношений
-    name_row = list(result.keys())[-1]
-    leading_column = result[name_row].index(min(result[name_row][0:-1]))
-    for i in result:
-        if i == "Basic":
-            continue
-        result[i].append(getAttitude(result[i][-1], result[i][leading_column]))
-
-    return result
-
-
+"""
 func = "1;2"
 extremum = "max"
 odd = ["-1;1", "1;-2", "1;1"]
 condition = ["<=", "<=", "<="]
 free_e = ["1", "1", "3"]
-"""
+
 func = "-1;2"
 extremum = "max"
 odd = ["1;1", "2;1"]
@@ -311,16 +283,25 @@ odd = ["-3;-1;1", "-2;-4;1"]
 condition = ["<=", "=>"]
 free_e = ["2", "3"]
 """
+func = "6;3;-1"
+extremum = "min"
+odd = ["-1;4;2", "5;3;1"]
+condition = ["=>", "<="]
+free_e = ["4", "1"]
 
-basic = getDictBasic(func, extremum, odd, condition, free_e)
-
+'''
 while True:
     if validAttitude(basic):
         print("break")
         break
-    if validFunction(basic["F"][0:-1]):
+    if validFunction(basic["F"][0:-2]):
         break
     basic = getNewDictBasic(basic)
     pass
+'''
 
-print(basic)
+pb = PrimaryBasic(extremum, func, odd, condition, free_e)
+s = SecondaryBasic(pb.primary_basic)
+
+print(s1)
+print(s.secondary_basic)
