@@ -257,12 +257,11 @@ def validAttitude(dict_basic):
 
 
 def validFunction(list_function):
-    result = False
+    result = True
     for i in list_function:
         if 0 > i:
             return result
-    return True
-
+    return False
 
 """
 func = "1;2"
@@ -282,26 +281,25 @@ extremum = "min"
 odd = ["-3;-1;1", "-2;-4;1"]
 condition = ["<=", "=>"]
 free_e = ["2", "3"]
-"""
+
 func = "6;3;-1"
 extremum = "min"
 odd = ["-1;4;2", "5;3;1"]
-condition = ["=>", "<="]
+condition = ["=>", "=>"]
 free_e = ["4", "1"]
 
-'''
-while True:
-    if validAttitude(basic):
+func = "3;2"
+extremum = "max"
+odd = ["3;1", "2;-2"]
+condition = ["<=", "<="]
+free_e = ["2", "-1"]
+
+
+
+pb = PrimaryBasic(extremum, func, odd, condition, free_e).primary_basic
+while validFunction(pb[list(pb.keys())[-1]][0:-2]):
+    if validAttitude(pb):
         print("break")
         break
-    if validFunction(basic["F"][0:-2]):
-        break
-    basic = getNewDictBasic(basic)
-    pass
-'''
-
-pb = PrimaryBasic(extremum, func, odd, condition, free_e)
-s = SecondaryBasic(pb.primary_basic)
-
-print(s1)
-print(s.secondary_basic)
+    pb = SecondaryBasic(pb).secondary_basic
+"""

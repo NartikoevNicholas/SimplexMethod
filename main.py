@@ -1,17 +1,9 @@
 import sys
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from ViewApp import MainWindow
+from PyQt5.QtWidgets import QApplication
 
 
-def application():
-    app = QApplication(sys.argv)
-
-    windows = QMainWindow()
-    windows.setWindowTitle("Simplex method")
-    windows.setGeometry(0, 0, 300, 250)
-    windows.show()
-
-    sys.exit(app.exec_())
-
-
-application()
+app = QApplication(sys.argv)
+win = MainWindow()
+win.main_window.show()
+sys.exit(app.exec_())
