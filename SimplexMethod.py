@@ -1,15 +1,20 @@
 from copy import deepcopy
 
 
-class PrimaryBasic:
+class Basic:
     # Создаем объекта
     def __init__(self, str_extremum, str_function, list_odd, list_condition, list_free_e):
+        self.dict_results = dict()
         self.str_extremum = str_extremum
         self.list_odds_function = [float(x) for x in str_function.split(";")]
         self.list_condition = list_condition
         self.list_free_element = [float(x) for x in list_free_e]
         self.list_odds_condition = self.getCanonicalViewOddsConditionAndConnectFreeElement(list_odd)
-        self.primary_basic = self.getDictMainBasic()
+
+        self.basic = self.getPrimaryBasic()
+        self.main_element = self.getMainElement()
+        self.row_coefficient = self.getRowCoefficient()
+        self.temp_basic = dict()
 
     # Приводим к каноническому виду члены условий
     def getCanonicalViewOddsConditionAndConnectFreeElement(self, list_odd):
@@ -46,8 +51,8 @@ class PrimaryBasic:
             result[i].append(self.list_free_element[i])
         return result
 
-    # Начальная базисная таблица
-    def getDictMainBasic(self):
+    # Первичная базисная таблица
+    def getPrimaryBasic(self):
         # Начальная базисная таблица, дальше - НБТ
         dict_basic = dict()
 
@@ -100,75 +105,90 @@ class PrimaryBasic:
             if i == "Basic":
                 continue
             dict_basic[i].append(getAttitude(dict_basic[i][-1], dict_basic[i][leading_column]))
+
+        self.dict_results[0] = dict_basic
         return dict_basic
 
+    # Вторичная базисная таблица
+    def getSecondaryBasic(self):
+        result = dict()
 
-class SecondaryBasic:
-    # Создаем объекта
-    def __init__(self, dict_basic):
-        self.primary_basic = dict_basic
-        self.main_element = self.getMainElement()
-        self.row_coefficient = self.getRowCoefficient()
-        self.temp_basic = dict()
-        self.secondary_basic = self.getSecondaryBasic()
+        # шапка таблицы
+        result["Basic"] = self.basic["Basic"]
 
+        # Считаем костяк таблицы
+        for _, i in enumerate(self.basic):
+            if i == "Basic":
+                continue
+            if _ == self.main_element[2]:
+                str_key = result["Basic"][self.main_element[1]]
+                result[str_key] = self.row_coefficient
+                continue
+            temp_row = list()
+            for __, j in enumerate(self.basic[i][0:-1]):
+                y = self.row_coefficient[__]
+                temp_row.append(j - (y * self.basic[i][self.main_element[1]]))
+            result[i] = temp_row
+
+        # Проверяем можем ли удалить псевдофункции (Если таковые есть)
+        self.temp_basic = result
+        result = self.dropRow()
+
+        # Считаем столбец отношений
+        name_row = list(result.keys())[-1]
+        leading_column = result[name_row].index(min(result[name_row][0:-1]))
+        for i in result:
+            if i == "Basic":
+                continue
+            result[i].append(getAttitude(result[i][-1], result[i][leading_column]))
+
+        self.basic = result
+
+    # Главный элемент и его индексы
     def getMainElement(self):
         # Номер строки и столбца и элемент этого индекса
         result = list()
 
         # Номер стобца
-        name_row = list(self.primary_basic.keys())[-1]
-        leading_column = self.primary_basic[name_row].index(min(self.primary_basic[name_row][0:-2]))
+        name_row = list(self.basic.keys())[-1]
+        leading_column = self.basic[name_row].index(min(self.basic[name_row][0:-2]))
 
         # Номер строки
         str_key = ""
         temp_value = 0
-        for i in self.primary_basic:
+        for i in self.basic:
             if i == "Basic":
                 continue
-            if self.primary_basic[i][-1] is not None:
-                temp_value = self.primary_basic[i][-1]
+            if self.basic[i][-1] is not None:
+                temp_value = self.basic[i][-1]
                 str_key = i
                 break
 
-        for i in self.primary_basic:
+        for i in self.basic:
             if i == "Basic":
                 continue
-            if self.primary_basic[i][-1] is not None and temp_value > self.primary_basic[i][-1]:
-                temp_value = self.primary_basic[i][-1]
+            if self.basic[i][-1] is not None and temp_value > self.basic[i][-1]:
+                temp_value = self.basic[i][-1]
                 str_key = i
-        leading_row = list(self.primary_basic.keys()).index(str_key)
+        leading_row = list(self.basic.keys()).index(str_key)
 
         # Добавление элементов
-        result.append(self.primary_basic[str_key][leading_column])
+        result.append(self.basic[str_key][leading_column])
         result.append(leading_column)
         result.append(leading_row)
         return result
 
+    # Строка коэффициентов
     def getRowCoefficient(self):
         result = list()
-        list_row = self.primary_basic[list(self.primary_basic.keys())[self.main_element[2]]][0:-1]
+        list_row = self.basic[list(self.basic.keys())[self.main_element[2]]][0:-1]
         if self.main_element[0] == 1:
             return list_row
         for i in list_row:
             result.append(i / self.main_element[0])
         return result
 
-    def validOnDelFunc(self, index, int_index):
-        result = True
-        list_odds = self.temp_basic["W_" + str(index + 1)][0:-1]
-        for i in range(len(list_odds)):
-            if i == int_index:
-                if list_odds[i] == 1:
-                    continue
-                else:
-                    result = False
-                    break
-            if list_odds[i] != 0:
-                result = False
-                break
-        return result
-
+    # Удаление строки
     def dropRow(self):
         result = deepcopy(self.temp_basic)
         value = 0
@@ -201,39 +221,30 @@ class SecondaryBasic:
                     result[j] = temp_list
         return result
 
-    def getSecondaryBasic(self):
-        result = dict()
-
-        # шапка таблицы
-        result["Basic"] = self.primary_basic["Basic"]
-
-        # Считаем костяк таблицы
-        for _, i in enumerate(self.primary_basic):
-            if i == "Basic":
-                continue
-            if _ == self.main_element[2]:
-                str_key = result["Basic"][self.main_element[1]]
-                result[str_key] = self.row_coefficient
-                continue
-            temp_row = list()
-            for __, j in enumerate(self.primary_basic[i][0:-1]):
-                y = self.row_coefficient[__]
-                temp_row.append(j - (y * self.primary_basic[i][self.main_element[1]]))
-            result[i] = temp_row
-
-        # Проверяем можем ли удалить псевдофункции (Если таковые есть)
-        self.temp_basic = result
-        result = self.dropRow()
-
-        # Считаем столбец отношений
-        name_row = list(result.keys())[-1]
-        leading_column = result[name_row].index(min(result[name_row][0:-1]))
-        for i in result:
-            if i == "Basic":
-                continue
-            result[i].append(getAttitude(result[i][-1], result[i][leading_column]))
-
+    # Проверка для того что бы удалить строку
+    def validOnDelFunc(self, index, int_index):
+        result = True
+        list_odds = self.temp_basic["W_" + str(index + 1)][0:-1]
+        for i in range(len(list_odds)):
+            if i == int_index:
+                if list_odds[i] == 1:
+                    continue
+                else:
+                    result = False
+                    break
+            if list_odds[i] != 0:
+                result = False
+                break
         return result
+
+    def getResultDict(self):
+        while True:
+            if validAttitude(self.basic):
+                break
+            if validFunction(self.basic["F"][0:-2]):
+                break
+            self.getSecondaryBasic()
+            pass
 
 
 # Заполяняет столбец "Отношение"

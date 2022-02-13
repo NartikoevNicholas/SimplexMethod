@@ -6,13 +6,15 @@ class MainWindow:
         self.main_window = QtWidgets.QMainWindow()
         self.central_widget = QtWidgets.QWidget(self.main_window)
         self.btn_create_condition = QtWidgets.QPushButton(self.central_widget)
-        self.label_conditions = QtWidgets.QLabel(self.central_widget)
         self.Extremum = QtWidgets.QComboBox(self.central_widget)
         self.label_arrow = QtWidgets.QLabel(self.central_widget)
         self.line = QtWidgets.QFrame(self.central_widget)
         self.label_Function = QtWidgets.QLabel(self.central_widget)
         self.function_odds = QtWidgets.QLineEdit(self.central_widget)
-        self.list_condition = list()
+        self.dict_condition = dict()
+        self.index = 0
+        self.check_box = QtWidgets.QCheckBox(self.central_widget)
+        self.btn_calculate = QtWidgets.QPushButton(self.central_widget)
         self.ElementWindow()
 
     def ElementWindow(self):
@@ -82,42 +84,67 @@ class MainWindow:
         self.Extremum.addItem("max")
         self.Extremum.addItem("min")
 
-
-        # Надпись "Add condition"
-        self.label_conditions.setGeometry(QtCore.QRect(30, 60, 151, 16))
-        font = QtGui.QFont()
-        font.setFamily("MV Boli")
-        font.setPointSize(16)
-        self.label_conditions.setFont(font)
-        self.label_conditions.setObjectName("label_conditions")
-        self.label_conditions.setText("Add condition")
-
         # Кнопка добавления условия
-        self.btn_create_condition.setGeometry(QtCore.QRect(180, 60, 51, 21))
+        self.btn_create_condition.setGeometry(QtCore.QRect(30, 60, 130, 21))
         font = QtGui.QFont()
         font.setFamily("MV Boli")
-        font.setPointSize(11)
+        font.setPointSize(12)
         font.setBold(True)
         font.setWeight(75)
         self.btn_create_condition.setFont(font)
         self.btn_create_condition.setStyleSheet("background-color: rgb(12, 255, 0);\n"
                                                 "color: rgb(255, 255, 255);")
         self.btn_create_condition.setObjectName("btn_create_condition")
-        self.btn_create_condition.setText("+")
+        self.btn_create_condition.setText("Add condition")
         self.btn_create_condition.clicked.connect(self.click_btn_create_condition)
+
+        # чекбокс
+        self.check_box.setGeometry(QtCore.QRect(250, 60, 180, 21))
+        font = QtGui.QFont()
+        font.setFamily("MV Boli")
+        font.setPointSize(13)
+        font.setBold(False)
+        font.setWeight(50)
+        self.check_box.setFont(font)
+        self.check_box.setText("Show all basic-table")
+
+        # Кнопка рассчитать
+        self.btn_calculate.setGeometry(QtCore.QRect(350, 90, 100, 21))
+        font = QtGui.QFont()
+        font.setFamily("MV Boli")
+        font.setPointSize(12)
+        font.setBold(True)
+        font.setWeight(75)
+        self.btn_calculate.setFont(font)
+        self.btn_calculate.setStyleSheet("background-color: rgb(56, 68, 70);\n"
+                                                "color: rgb(255, 255, 255);")
+        self.btn_calculate.setObjectName("btn_create_condition")
+        self.btn_calculate.setText("Calculate")
+        self.btn_calculate.clicked.connect(self.click_btn_calculate)
 
         self.main_window.setCentralWidget(self.central_widget)
         QtCore.QMetaObject.connectSlotsByName(self.main_window)
 
     def click_btn_create_condition(self):
-        row = RowCondition(self)
-        self.list_condition.append(row)
+        for i in range(len(self.dict_condition) + 1):
+            if len(self.dict_condition) == 0:
+                self.index = 0
+                break
+            elif self.dict_condition.__contains__(i):
+                continue
+            else:
+                self.index = i
+                break
+        self.dict_condition[self.index] = RowCondition(self)
+
+    def click_btn_calculate(self):
+        pass
 
 
 class RowCondition:
     def __init__(self, main_window):
         self.main_window = main_window
-        self.index = len(self.main_window.list_condition)
+        self.index = self.main_window.index
         self.label_condition = QtWidgets.QLabel(self.main_window.central_widget)
         self.condition_odds = QtWidgets.QLineEdit(self.main_window.central_widget)
         self.condition = QtWidgets.QComboBox(self.main_window.central_widget)
@@ -126,8 +153,12 @@ class RowCondition:
         self.ElementRow()
 
     def ElementRow(self):
+
+        # Отступ
+        indent = 90 + (30 * self.index)
+
         # Надпись "Odd condition"
-        self.label_condition.setGeometry(QtCore.QRect(10, 90 + (30 * len(self.main_window.list_condition)), 150, 21))
+        self.label_condition.setGeometry(QtCore.QRect(10, indent, 150, 21))
         font = QtGui.QFont()
         font.setFamily("MV Boli")
         font.setPointSize(14)
@@ -140,7 +171,7 @@ class RowCondition:
         self.label_condition.show()
 
         # Поле ввода членов условий
-        self.condition_odds.setGeometry(QtCore.QRect(150, 90 + (30 * len(self.main_window.list_condition)), 150, 21))
+        self.condition_odds.setGeometry(QtCore.QRect(150, indent, 150, 21))
         font = QtGui.QFont()
         font.setFamily("MV Boli")
         font.setPointSize(12)
@@ -151,7 +182,7 @@ class RowCondition:
         self.condition_odds.show()
 
         # условие
-        self.condition.setGeometry(QtCore.QRect(305, 90 + (30 * len(self.main_window.list_condition)), 50, 21))
+        self.condition.setGeometry(QtCore.QRect(305, indent, 50, 21))
         font = QtGui.QFont()
         font.setFamily("MV Boli")
         font.setPointSize(12)
@@ -169,7 +200,7 @@ class RowCondition:
         self.condition.show()
 
         # Поле ввода свободного члена
-        self.free_element.setGeometry(QtCore.QRect(360, 90 + (30 * len(self.main_window.list_condition)), 50, 21))
+        self.free_element.setGeometry(QtCore.QRect(360, indent, 50, 21))
         font = QtGui.QFont()
         font.setFamily("MV Boli")
         font.setPointSize(12)
@@ -180,7 +211,7 @@ class RowCondition:
         self.free_element.show()
 
         # Кнопка удаления строки
-        self.btn_del_row.setGeometry(QtCore.QRect(415, 90 + (30 * len(self.main_window.list_condition)), 70, 21))
+        self.btn_del_row.setGeometry(QtCore.QRect(415, indent, 70, 21))
         font = QtGui.QFont()
         font.setFamily("MV Boli")
         font.setPointSize(12)
@@ -193,10 +224,25 @@ class RowCondition:
         self.btn_del_row.clicked.connect(self.click_btn_del_row)
         self.btn_del_row.show()
 
+        # Отступ кнопки "self.main_window.dict_condition"
+        if len(self.main_window.dict_condition) == 0:
+            self.main_window.btn_calculate.move(350, 120)
+        else:
+            len_dict = len(self.main_window.dict_condition)
+            sup_dict = max(self.main_window.dict_condition.keys())
+            if len_dict > sup_dict:
+                self.main_window.btn_calculate.move(350, 120 + (30 * len_dict))
+            else:
+                self.main_window.btn_calculate.move(350, 120 + (30 * sup_dict))
+
     def click_btn_del_row(self):
         self.label_condition.deleteLater()
         self.condition_odds.deleteLater()
         self.condition.deleteLater()
         self.free_element.deleteLater()
         self.btn_del_row.deleteLater()
-        del self.main_window.list_condition[self.index]
+        self.main_window.dict_condition.pop(self.index)
+        if len(self.main_window.dict_condition) == 0:
+            self.main_window.btn_calculate.move(350, 90)
+        else:
+            self.main_window.btn_calculate.move(350, 120 + (30 * max(self.main_window.dict_condition.keys())))
