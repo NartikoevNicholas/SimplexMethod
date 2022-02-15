@@ -105,7 +105,6 @@ class Basic:
             if i == "Basic":
                 continue
             dict_basic[i].append(getAttitude(dict_basic[i][-1], dict_basic[i][leading_column]))
-
         self.dict_results[0] = dict_basic
         return dict_basic
 
@@ -238,13 +237,36 @@ class Basic:
         return result
 
     def getResultDict(self):
+        index = 1
         while True:
-            if validAttitude(self.basic):
+            if self.validAttitude():
                 break
-            if validFunction(self.basic["F"][0:-2]):
+            if self.validFunction():
                 break
+            self.main_element = self.getMainElement()
+            self.row_coefficient = self.getRowCoefficient()
             self.getSecondaryBasic()
+            self.dict_results[index] = self.basic
+            index += 1
             pass
+
+    # Условие выхода по функции
+    def validFunction(self):
+        result = False
+        for i in self.basic["F"][0:-2]:
+            if 0 > i:
+                return result
+        return True
+
+    # Условие выхода по Отношению
+    def validAttitude(self):
+        result = True
+        for i in self.basic:
+            if i == "Basic":
+                continue
+            if self.basic[i][-1] is not None:
+                return False
+        return result
 
 
 # Заполяняет столбец "Отношение"
@@ -255,24 +277,6 @@ def getAttitude(float_free_element, float_element_main_row):
     result = float_free_element/float_element_main_row
     return result
 
-
-# Провверка столбца "Отношение" на неопределенные значения
-def validAttitude(dict_basic):
-    result = True
-    for i in dict_basic:
-        if i == "Basic":
-            continue
-        if dict_basic[i][-1] is not None:
-            return False
-    return result
-
-
-def validFunction(list_function):
-    result = True
-    for i in list_function:
-        if 0 > i:
-            return result
-    return False
 
 """
 func = "1;2"

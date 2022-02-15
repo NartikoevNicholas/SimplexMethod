@@ -1,20 +1,29 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
+from SimplexMethod import Basic
 
 
 class MainWindow:
     def __init__(self):
         self.main_window = QtWidgets.QMainWindow()
         self.central_widget = QtWidgets.QWidget(self.main_window)
-        self.btn_create_condition = QtWidgets.QPushButton(self.central_widget)
-        self.Extremum = QtWidgets.QComboBox(self.central_widget)
-        self.label_arrow = QtWidgets.QLabel(self.central_widget)
-        self.line = QtWidgets.QFrame(self.central_widget)
+
         self.label_Function = QtWidgets.QLabel(self.central_widget)
         self.function_odds = QtWidgets.QLineEdit(self.central_widget)
-        self.dict_condition = dict()
-        self.index = 0
+        self.label_arrow = QtWidgets.QLabel(self.central_widget)
+        self.extremum = QtWidgets.QComboBox(self.central_widget)
+
+        self.line = QtWidgets.QFrame(self.central_widget)
+        self.btn_create_condition = QtWidgets.QPushButton(self.central_widget)
         self.check_box = QtWidgets.QCheckBox(self.central_widget)
+
+        self.index = 0
+        self.dict_condition = dict()
+
         self.btn_calculate = QtWidgets.QPushButton(self.central_widget)
+
+        self.dict_basic_table = dict()
+        self.btn_to_input = QtWidgets.QPushButton(self.main_window)
+
         self.ElementWindow()
 
     def ElementWindow(self):
@@ -26,7 +35,6 @@ class MainWindow:
         font.setWeight(75)
         self.main_window.setFont(font)
         self.main_window.setStyleSheet("background-color: rgb(248, 255, 171);")
-
         self.central_widget.setObjectName("central_widget")
 
         # надпись "Function"
@@ -37,9 +45,7 @@ class MainWindow:
         font.setBold(False)
         font.setWeight(50)
         self.label_Function.setFont(font)
-        self.label_Function.setStyleSheet("")
         self.label_Function.setTextFormat(QtCore.Qt.AutoText)
-        self.label_Function.setObjectName("label_Function")
         self.label_Function.setText("Function")
 
         # Поле ввода членов
@@ -50,13 +56,11 @@ class MainWindow:
         self.function_odds.setFont(font)
         self.function_odds.setStyleSheet("color: rgb(0, 0, 0);\n"
                                          "background-color: rgb(255, 255, 255);")
-        self.function_odds.setObjectName("function_odds")
 
         # Горизонтальная черта
         self.line.setGeometry(QtCore.QRect(10, 40, 480, 16))
         self.line.setFrameShape(QtWidgets.QFrame.HLine)
         self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.line.setObjectName("line")
 
         # Стрелка
         self.label_arrow.setGeometry(QtCore.QRect(370, 13, 31, 21))
@@ -67,22 +71,20 @@ class MainWindow:
         self.label_arrow.setFont(font)
         self.label_arrow.setText("")
         self.label_arrow.setPixmap(QtGui.QPixmap("right.ico"))
-        self.label_arrow.setObjectName("label")
 
         # Экстремум
-        self.Extremum.setGeometry(QtCore.QRect(405, 13, 61, 21))
+        self.extremum.setGeometry(QtCore.QRect(405, 13, 61, 21))
         font = QtGui.QFont()
         font.setFamily("MV Boli")
         font.setPointSize(12)
         font.setBold(True)
         font.setWeight(75)
-        self.Extremum.setFont(font)
-        self.Extremum.setStyleSheet(
+        self.extremum.setFont(font)
+        self.extremum.setStyleSheet(
             "background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, stop:0 rgba(255, 178, 102, 255), stop:0.55 rgba(235, 148, 61, 255), stop:0.98 rgba(0, 0, 0, 255), stop:1 rgba(0, 0, 0, 0));\n"
             "color: rgb(255, 248, 249);")
-        self.Extremum.setObjectName("Extremum")
-        self.Extremum.addItem("max")
-        self.Extremum.addItem("min")
+        self.extremum.addItem("max")
+        self.extremum.addItem("min")
 
         # Кнопка добавления условия
         self.btn_create_condition.setGeometry(QtCore.QRect(30, 60, 130, 21))
@@ -94,7 +96,6 @@ class MainWindow:
         self.btn_create_condition.setFont(font)
         self.btn_create_condition.setStyleSheet("background-color: rgb(12, 255, 0);\n"
                                                 "color: rgb(255, 255, 255);")
-        self.btn_create_condition.setObjectName("btn_create_condition")
         self.btn_create_condition.setText("Add condition")
         self.btn_create_condition.clicked.connect(self.click_btn_create_condition)
 
@@ -118,12 +119,35 @@ class MainWindow:
         self.btn_calculate.setFont(font)
         self.btn_calculate.setStyleSheet("background-color: rgb(56, 68, 70);\n"
                                                 "color: rgb(255, 255, 255);")
-        self.btn_calculate.setObjectName("btn_create_condition")
         self.btn_calculate.setText("Calculate")
         self.btn_calculate.clicked.connect(self.click_btn_calculate)
 
+        self.btn_to_input.setGeometry(QtCore.QRect(10, 10, 80, 21))
+        font = QtGui.QFont()
+        font.setFamily("MV Boli")
+        font.setPointSize(12)
+        font.setBold(True)
+        font.setWeight(75)
+        self.btn_to_input.setFont(font)
+        self.btn_to_input.setStyleSheet("background-color: rgb(56, 68, 70);\n"
+                                         "color: rgb(255, 255, 255);")
+        self.btn_to_input.setText("To input")
+        self.btn_to_input.clicked.connect(self.click_btn_to_input)
+        self.btn_to_input.hide()
+
         self.main_window.setCentralWidget(self.central_widget)
         QtCore.QMetaObject.connectSlotsByName(self.main_window)
+
+    def ShowTable(self):
+        self.main_window.centralWidget().hide()
+        self.btn_to_input.show()
+
+        if self.check_box.isChecked():
+            t = Table(self.main_window, self.dict_basic_table[0])
+            t.show()
+        else:
+            pass
+        print()
 
     def click_btn_create_condition(self):
         for i in range(len(self.dict_condition) + 1):
@@ -138,7 +162,44 @@ class MainWindow:
         self.dict_condition[self.index] = RowCondition(self)
 
     def click_btn_calculate(self):
-        pass
+
+        # Сбор данных
+        extremum = self.extremum.currentText()
+        function_odds = self.function_odds.text()
+        list_condition_odds = list()
+        list_conditions = list()
+        list_free_odds = list()
+        for i in range(len(self.dict_condition)):
+            list_condition_odds.append(self.dict_condition[i].condition_odds.text())
+            list_conditions.append(self.dict_condition[i].condition.currentText())
+            list_free_odds.append(self.dict_condition[i].free_element.text())
+
+        # Рассчет полученных данных
+        try:
+            # Симплекс таблицы
+            basic = Basic(extremum, function_odds, list_condition_odds, list_conditions, list_free_odds)
+            basic.getResultDict()
+
+            # Преобразование данных
+            for i in range(len(basic.dict_results)):
+                temp_list_table = list()
+                list_keys = basic.dict_results[i].keys()
+                for key in list_keys:
+                    temp_list_row = list()
+                    temp_list_row.append(key)
+                    list_value_row = basic.dict_results[i][key]
+                    for value in list_value_row:
+                        temp_list_row.append(str(value))
+                    temp_list_table.append(temp_list_row)
+                self.dict_basic_table[i] = temp_list_table
+            self.ShowTable()
+
+        except Exception as ex:
+            print(ex)
+
+    def click_btn_to_input(self):
+        self.btn_to_input.hide()
+        self.main_window.centralWidget().show()
 
 
 class RowCondition:
@@ -246,3 +307,38 @@ class RowCondition:
             self.main_window.btn_calculate.move(350, 90)
         else:
             self.main_window.btn_calculate.move(350, 120 + (30 * max(self.main_window.dict_condition.keys())))
+
+
+class Table:
+    def __init__(self, main_window, table_list):
+        self.main_window = main_window
+        self.list_label = list()
+        self.getTable(table_list)
+
+    def getTable(self, table_list):
+        # Шрифт
+        font = QtGui.QFont()
+        font.setFamily("MV Boli")
+        font.setPointSize(8)
+        font.setBold(False)
+        font.setWeight(50)
+
+        for _, row in enumerate(table_list):
+            location_y = 35 + (round(self.main_window.height() / len(table_list)) * _)
+            for __, text in enumerate(row):
+                location_x = 5 + (round(self.main_window.width() / len(row)) * __)
+                label_cell = QtWidgets.QLabel(self.main_window)
+                label_cell.setFont(font)
+                label_cell.move(location_x, location_y)
+                label_cell.adjustSize()
+                label_cell.setText(text)
+                label_cell.hide()
+                self.list_label.append(label_cell)
+
+    def show(self):
+        for label in self.list_label:
+            label.show()
+
+    def hide(self):
+        for label in self.list_label:
+            label.hide()
